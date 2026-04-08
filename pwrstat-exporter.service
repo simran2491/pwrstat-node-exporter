@@ -1,0 +1,24 @@
+[Unit]
+Description=pwrstat Prometheus Exporter for CyberPower UPS
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/opt/pwrstat-node-exporter/pwrstat_exporter.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pwrstat-exporter
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/pwrstat-node-exporter
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
