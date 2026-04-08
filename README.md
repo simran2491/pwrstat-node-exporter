@@ -1,27 +1,24 @@
 # pwrstat-node-exporter
 
-Prometheus exporter for CyberPower UPS via `pwrstat` command. Runs on your Linux host and exposes UPS metrics for Prometheus scraping.
+Prometheus exporter for CyberPower UPS. One command to install.
 
-## Quick Install
-
-One command to install everything:
+## Install
 
 ```bash
-git clone https://github.com/simran2491/pwrstat-node-exporter.git
-cd pwrstat-node-exporter
-sudo ./install.sh
+curl -fsSL https://raw.githubusercontent.com/simran2491/pwrstat-node-exporter/main/install.sh | sudo bash
 ```
 
-That's it! The exporter will:
-- ✅ Install as a systemd service
-- ✅ Start automatically on boot
-- ✅ Serve metrics on `http://<host-ip>:9182/metrics`
-- ✅ Restart on failure
+That's it. The installer will:
+- ✅ Download the exporter from this repo
+- ✅ Install it to `/opt/pwrstat-node-exporter/`
+- ✅ Set up a systemd service
+- ✅ Enable it to start on boot
+- ✅ Verify metrics are working
 
-## Uninstall
+### Install Specific Version
 
 ```bash
-sudo ./uninstall.sh
+curl -fsSL https://raw.githubusercontent.com/simran2491/pwrstat-node-exporter/main/install.sh | sudo bash -s -- --version v1.0.0
 ```
 
 ## Prerequisites
@@ -31,9 +28,13 @@ sudo ./uninstall.sh
    - Download: https://www.cyberpowersystems.com/products/software/powerpanel-linux/
 3. **Python 3** (usually pre-installed)
 
-## What It Monitors
+## Uninstall
 
-Exports these UPS metrics:
+```bash
+curl -fsSL https://raw.githubusercontent.com/simran2491/pwrstat-node-exporter/main/uninstall.sh | sudo bash
+```
+
+## What It Monitors
 
 | Metric | Description |
 |--------|-------------|
@@ -45,14 +46,12 @@ Exports these UPS metrics:
 | `pwrstat_utility_voltage_volts` | Input voltage from utility |
 | `pwrstat_output_voltage_volts` | UPS output voltage |
 | `pwrstat_power_source` | Power source (1=Utility, 0=Battery) |
-| `pwrstat_rating_voltage_volts` | UPS rated voltage |
-| `pwrstat_rating_power_watts` | UPS rated power capacity |
 | `pwrstat_test_result` | Last self-test result (1=Pass, 0=Fail) |
 | `pwrstat_last_power_event_info` | Last power event info |
 
 ## Configure Prometheus Scrape
 
-Add this to your `kube-prometheus-stack` Helm values:
+Add to your `kube-prometheus-stack` Helm values:
 
 ```yaml
 prometheus:
@@ -60,26 +59,24 @@ prometheus:
     additionalScrapeConfigs:
       - job_name: 'pwrstat-exporter'
         scrape_interval: 30s
-        scrape_timeout: 10s
         static_configs:
           - targets: ['<NODE_IP>:9182']
             labels:
               instance: 'master-ups'
-              job: 'ups-monitoring'
 ```
 
 Replace `<NODE_IP>` with your host IP (e.g., `10.0.0.219`).
 
-## Verify Installation
+## Verify
 
 ```bash
-# Check service status
+# Check service
 systemctl status pwrstat-exporter
 
 # View metrics
 curl http://localhost:9182/metrics
 
-# Check logs
+# Logs
 journalctl -u pwrstat-exporter -f
 ```
 
@@ -101,7 +98,7 @@ pwrstat_load_watts 127
 
 ## Grafana Dashboard
 
-Import this JSON into Grafana for a complete UPS dashboard:
+Import this JSON into Grafana:
 
 ```json
 {
@@ -204,7 +201,7 @@ Import this JSON into Grafana for a complete UPS dashboard:
   ],
   "refresh": "30s",
   "schemaVersion": 38,
-  "tags": ["ups", "pwrstat", "cyberpower"],
+  "tags": ["ups", "pwrstat"],
   "time": {"from": "now-6h", "to": "now"},
   "title": "UPS Status"
 }
@@ -212,7 +209,7 @@ Import this JSON into Grafana for a complete UPS dashboard:
 
 ## Alerting Rules
 
-Add to your Prometheus stack values:
+Add to Prometheus stack:
 
 ```yaml
 additionalPrometheusRulesMap:
@@ -227,7 +224,6 @@ additionalPrometheusRulesMap:
               severity: warning
             annotations:
               summary: "UPS running on battery"
-              description: "UPS has switched to battery power."
 
           - alert: UPSBatteryLow
             expr: pwrstat_battery_capacity_percent < 20
@@ -235,8 +231,7 @@ additionalPrometheusRulesMap:
             labels:
               severity: critical
             annotations:
-              summary: "UPS battery critically low"
-              description: "UPS battery at {{ $value }}%."
+              summary: "UPS battery at {{ $value }}%"
 
           - alert: UPSHighLoad
             expr: pwrstat_load_percent > 80
@@ -244,107 +239,37 @@ additionalPrometheusRulesMap:
             labels:
               severity: warning
             annotations:
-              summary: "UPS load high"
-              description: "UPS load at {{ $value }}%."
-```
-
-## File Structure
-
-```
-pwrstat-node-exporter/
-├── install.sh                 # One-command installer (run with sudo)
-├── uninstall.sh               # Clean uninstaller (run with sudo)
-├── pwrstat_exporter.py        # Main exporter script
-└── pwrstat-exporter.service   # systemd unit file
+              summary: "UPS load at {{ $value }}%"
 ```
 
 ## Troubleshooting
 
-### Service not starting
-
 ```bash
+# Service not starting
 systemctl status pwrstat-exporter
 journalctl -u pwrstat-exporter -f
-```
 
-### pwrstat not found
-
-```bash
-# Check if installed
+# pwrstat not found
 which pwrstat
-
-# Test it
 sudo pwrstat -status
-```
 
-### Metrics not available
-
-```bash
-# Check if exporter is running
+# Check metrics endpoint
 curl http://localhost:9182/metrics
 curl http://localhost:9182/health
-
-# Check firewall
-sudo firewall-cmd --list-ports
-```
-
-### Prometheus not scraping
-
-```bash
-# Check Prometheus targets
-kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090
-# Open http://localhost:9090/targets
-
-# Query metrics
-curl -s 'http://localhost:9090/api/v1/query?query=pwrstat_battery_capacity_percent'
-```
-
-## Manual Installation
-
-If you prefer to install manually instead of using `install.sh`:
-
-```bash
-# 1. Create directory
-sudo mkdir -p /opt/pwrstat-node-exporter
-
-# 2. Copy files
-sudo cp pwrstat_exporter.py /opt/pwrstat-node-exporter/
-sudo cp pwrstat-exporter.service /etc/systemd/system/
-sudo chmod +x /opt/pwrstat-node-exporter/pwrstat_exporter.py
-
-# 3. Configure sudo
-echo 'ALL ALL=(ALL) NOPASSWD: /usr/bin/pwrstat' | sudo tee /etc/sudoers.d/pwrstat
-sudo chmod 440 /etc/sudoers.d/pwrstat
-
-# 4. Start service
-sudo systemctl daemon-reload
-sudo systemctl enable pwrstat-exporter
-sudo systemctl start pwrstat-exporter
 ```
 
 ## Architecture
 
 ```
-Linux Host (with USB UPS)          Kubernetes Cluster
-┌────────────────────────┐         ┌──────────────────────┐
-│ pwrstat CLI            │         │ Prometheus Server    │
-│      ↑                 │ scrape  │  (monitoring ns)     │
-│      │                 │◄────────│                      │
-│ pwrstat_exporter.py   │ :9182   │ additionalScrapeConfigs│
-│ (systemd service)      │         │ → static_config       │
-└────────────────────────┘         └──────────────────────┘
+Linux Host (UPS via USB)        Kubernetes Cluster
+┌──────────────────────┐        ┌──────────────────────┐
+│ pwrstat CLI          │ scrape │ Prometheus Server    │
+│      ↑               │◄───────│  :9182               │
+│ pwrstat_exporter.py │        └──────────────────────┘
+│ (systemd service)    │
+└──────────────────────┘
 ```
-
-## Security
-
-- **Minimal privileges**: Exporter only has sudo access to `/usr/bin/pwrstat`
-- **Network isolation**: Metrics endpoint should only be accessible from your cluster nodes
-- **No authentication**: Relies on network isolation (internal network)
 
 ## License
 
 MIT
-
-## Author
-
-Simranjeet Singh
