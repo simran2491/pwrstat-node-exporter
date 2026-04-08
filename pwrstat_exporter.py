@@ -15,7 +15,7 @@ import sys
 import signal
 
 EXPORTER_PORT = 9182
-PWRSTAT_COMMAND = ['sudo', 'pwrstat', '-status']
+PWRSTAT_COMMAND = ['pwrstat', '-status']
 VERSION = "1.0.0"
 
 

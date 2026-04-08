@@ -5,7 +5,6 @@ set -euo pipefail
 
 INSTALL_DIR="/opt/pwrstat-node-exporter"
 SERVICE_NAME="pwrstat-exporter"
-SUDOERS_FILE="/etc/sudoers.d/pwrstat"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -35,8 +34,5 @@ systemctl daemon-reload
 
 log_info "Removing installation directory..."
 rm -rf $INSTALL_DIR
-
-log_info "Removing sudoers configuration..."
-rm -f $SUDOERS_FILE
 
 log_info "✓ pwrstat-node-exporter uninstalled successfully"

@@ -16,7 +16,6 @@ REPO_NAME="pwrstat-node-exporter"
 REPO_BRANCH="main"
 INSTALL_DIR="/opt/pwrstat-node-exporter"
 SERVICE_NAME="pwrstat-exporter"
-SUDOERS_FILE="/etc/sudoers.d/pwrstat"
 EXPORTER_PORT=9182
 
 # Colors
@@ -197,16 +196,10 @@ install_files() {
     log_info "✓ Files installed to $INSTALL_DIR"
 }
 
-# Configure sudo for pwrstat
+# Configure sudo for pwrstat - NOT NEEDED since service runs as root
 configure_sudo() {
-    log_step "Configuring passwordless sudo for pwrstat..."
-    
-    cat > $SUDOERS_FILE << EOF
-# Allow pwrstat command without password for pwrstat-exporter service
-ALL ALL=(ALL) NOPASSWD: ${PWRSTAT_PATH}
-EOF
-    chmod 440 $SUDOERS_FILE
-    log_info "✓ Sudoers configured"
+    # Service runs as root, so no sudoers file needed
+    log_info "✓ No sudoers configuration required (service runs as root)"
 }
 
 # Update systemd service to use correct pwrstat path
