@@ -38,6 +38,42 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+# Check if pwrstat is installed - MUST BE FIRST
+check_pwrstat() {
+    if ! command -v pwrstat &> /dev/null; then
+        echo ""
+        log_error "pwrstat command not found!"
+        echo ""
+        echo "════════════════════════════════════════════════════════"
+        echo ""
+        echo "⚠️  This exporter requires CyberPower PowerPanel for Linux"
+        echo "   which provides the 'pwrstat' command."
+        echo ""
+        echo "📥 Install PowerPanel BEFORE running this installer:"
+        echo ""
+        echo "   1. Download the correct version for your system:"
+        echo "      https://www.cyberpowersystems.com/products/software/powerpanel-linux/"
+        echo ""
+        echo "   2. Install the package:"
+        echo "      # For Debian/Ubuntu:"
+        echo "      sudo dpkg -i pwrstat*.deb"
+        echo ""
+        echo "      # For RHEL/CentOS/Fedora:"
+        echo "      sudo rpm -i pwrstat*.rpm"
+        echo ""
+        echo "   3. Verify installation:"
+        echo "      pwrstat -status"
+        echo ""
+        echo "   4. Then run this installer again:"
+        echo "      curl -fsSL https://raw.githubusercontent.com/simranjeet/91/pwrstat-node-exporter/main/install.sh | sudo bash"
+        echo ""
+        echo "════════════════════════════════════════════════════════"
+        echo ""
+        exit 1
+    fi
+    log_info "✓ pwrstat found at $(which pwrstat)"
+}
+
 # Parse optional arguments
 PWRSTAT_PATH="/usr/bin/pwrstat"
 
@@ -261,6 +297,7 @@ main() {
     echo -e "${BLUE}╚══════════════════════════════════════════════════╝${NC}"
     echo ""
     
+    # Check pwrstat FIRST - this is the critical dependency
     check_pwrstat
     check_python
     stop_existing
