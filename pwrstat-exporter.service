@@ -13,8 +13,7 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=pwrstat-exporter
 
-# Security hardening
-NoNewPrivileges=true
+# Security hardening (limited since we run as root for pwrstat access)
 ProtectSystem=strict
 ProtectHome=true
 ReadWritePaths=/opt/pwrstat-node-exporter
