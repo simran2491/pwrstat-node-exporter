@@ -98,114 +98,19 @@ pwrstat_load_watts 127
 
 ## Grafana Dashboard
 
-Import this JSON into Grafana:
+A pre-built dashboard is included in this repo. Import it into Grafana:
 
-```json
-{
-  "annotations": {"list": []},
-  "editable": true,
-  "panels": [
-    {
-      "title": "UPS State",
-      "type": "stat",
-      "datasource": "Prometheus",
-      "targets": [{"expr": "pwrstat_state"}],
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {"options": {"1": {"text": "Normal"}}, "type": "value"},
-            {"options": {"0": {"text": "On Battery"}}, "type": "value"}
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {"color": "green", "value": null},
-              {"color": "red", "value": 0}
-            ]
-          }
-        }
-      },
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
-    },
-    {
-      "title": "Battery Capacity",
-      "type": "gauge",
-      "datasource": "Prometheus",
-      "targets": [{"expr": "pwrstat_battery_capacity_percent"}],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {"color": "red", "value": 0},
-              {"color": "yellow", "value": 20},
-              {"color": "green", "value": 50}
-            ]
-          }
-        }
-      },
-      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
-    },
-    {
-      "title": "Remaining Runtime",
-      "type": "stat",
-      "datasource": "Prometheus",
-      "targets": [{"expr": "pwrstat_remaining_runtime_minutes"}],
-      "fieldConfig": {"defaults": {"unit": "m"}},
-      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
-    },
-    {
-      "title": "Load %",
-      "type": "gauge",
-      "datasource": "Prometheus",
-      "targets": [{"expr": "pwrstat_load_percent"}],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {"color": "green", "value": null},
-              {"color": "yellow", "value": 60},
-              {"color": "red", "value": 80}
-            ]
-          }
-        }
-      },
-      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
-    },
-    {
-      "title": "Voltage",
-      "type": "timeseries",
-      "datasource": "Prometheus",
-      "targets": [
-        {"expr": "pwrstat_utility_voltage_volts", "legendFormat": "Utility"},
-        {"expr": "pwrstat_output_voltage_volts", "legendFormat": "Output"}
-      ],
-      "fieldConfig": {"defaults": {"unit": "volt"}},
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
-    },
-    {
-      "title": "Load (Watts)",
-      "type": "timeseries",
-      "datasource": "Prometheus",
-      "targets": [{"expr": "pwrstat_load_watts", "legendFormat": "Load"}],
-      "fieldConfig": {"defaults": {"unit": "watt"}},
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
-    }
-  ],
-  "refresh": "30s",
-  "schemaVersion": 38,
-  "tags": ["ups", "pwrstat"],
-  "time": {"from": "now-6h", "to": "now"},
-  "title": "UPS Status"
-}
-```
+1. Go to **Dashboards** → **Import**
+2. Upload `grafana-dashboard.json`
+3. Select your Prometheus datasource
+
+![CyberPower UPS Grafana Dashboard](screenshots/grafana-dashboard.png)
+
+**Dashboard features:**
+- UPS status, power source, and battery charge overview
+- Real-time load and voltage time series
+- Runtime, self-test, and power event panels
+- Energy cost tracking (30-day bill, daily average, trend) at $0.10/kWh
 
 ## Alerting Rules
 
